@@ -1,0 +1,7 @@
+# dsh-rea-toggle — one switch over the REA MCP server's share of the context.
+#
+# Mounted as a plain host plugin. It needs `tools`, `agents` and `systemPrompt`,
+# and picks up `commands` and `webServer` on its own when the profile has them.
+- insert:
+    - id: rea-toggle
+      name: dsh-rea-toggle

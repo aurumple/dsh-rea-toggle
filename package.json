@@ -1,0 +1,62 @@
+{
+  "name": "dsh-rea-toggle",
+  "version": "1.0.0",
+  "description": "One switch that takes the REA (reverse-engineer-anything) MCP server's tool schemas and its server-instructions prompt block out of the model context, per agent and live, and puts them back on demand. · 一个开关，实时把 REA 逆向工具的工具与说明从模型上下文中移除或放回。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "rea",
+    "mcp",
+    "context",
+    "tokens"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./icon.svg",
+  "license": "MIT",
+  "author": "aurumple",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aurumple/dsh-rea-toggle.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aurumple/dsh-rea-toggle/issues"
+  },
+  "homepage": "https://github.com/aurumple/dsh-rea-toggle#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "lib",
+    "client",
+    "locale",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  }
+}

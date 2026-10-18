@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "REA Context Toggle",
+    "description": "One switch that takes the REA MCP server's tool schemas and its server-instructions block out of the model context, per agent and live, and puts them back on demand."
+  }
+}

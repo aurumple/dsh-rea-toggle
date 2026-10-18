@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "REA 上下文开关",
+    "description": "一个开关，实时把 REA MCP 服务器的工具 schema 与说明块从模型上下文中移除或放回，按 agent 生效。"
+  }
+}
