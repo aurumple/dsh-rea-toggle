@@ -35,7 +35,7 @@ so one mechanism is not enough:
 | Target | Mechanism |
 | --- | --- |
 | Tool schemas | `tools.restrict({ deny })` is called **in each agent's own context**. `ToolRuntime.view()` filters what that scope *inherits* from the global layer, and the model-facing schema list is rebuilt from that view on every assembly. The reserved `run_code` transport sits outside the filterable layers, so it is unaffected. |
-| Instructions text | `dsh-mcp-client` registers the server instructions as a prompt section named `mcp:<server>` at order `MCP_SERVERS` (3100). **A scoped section with the same name shadows the global one** (`SystemPrompt.assemble` merges by name), and an empty section is dropped at render (`renderPrompt` keeps only `text.length > 0`). Registering that name and returning `''` therefore removes the block for that agent alone. |
+| Instructions text | `dsh-mcp-client` registers the server instructions as a prompt section named `mcp:<server>` at order `MCP_SERVERS` (3100). **A scoped section with the same name shadows the global one** — a documented contract of `systemPrompt.section()` ("a scoped section shadows a global section with the same name"), not an implementation detail — and an empty section is dropped at render (`renderPrompt` keeps only `text.length > 0`). Registering that name and returning `''` therefore removes the block for that agent alone. |
 
 Both are scoped registrations, so disposing them restores the previous state
 exactly. That is why flipping the switch needs no restart and no reload.
