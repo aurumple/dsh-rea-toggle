@@ -1,13 +1,18 @@
 /**
  * dsh-rea-toggle — Client half.
  *
- * One pill in the composer dock. It is deliberately dumb: it asks the Host half
- * what the switch currently is, and posts the opposite back. Every decision
- * about what "off" means lives in `lib/index.js`; nothing is duplicated here.
+ * One pill in the composer dock, showing the position of THE CONVERSATION IT IS
+ * IN. The slot hands a component its `sessionId`, which is the same id the Host
+ * keys its per-conversation state by, so the pill follows the user between
+ * conversations instead of describing one global switch.
+ *
+ * It is deliberately dumb: it asks the Host what this conversation currently is
+ * and posts the opposite back. Every decision about what "off" means lives in
+ * `lib/index.js`; nothing is duplicated here.
  *
  * The label is localized through the Client locale service, and the pill hides
- * itself entirely until the Host answers — an unlabelled control that silently
- * does nothing is worse than no control.
+ * itself until the Host answers — an unlabelled control that silently does
+ * nothing is worse than no control.
  */
 
 window.__ModuleLoader__.load({
@@ -27,8 +32,10 @@ window.__ModuleLoader__.load({
     const en = {
       on: 'REA on',
       off: 'REA off',
-      onTitle: 'REA context is on: the model can see REA\'s tool schemas and its instructions. Click to turn it off.',
-      offTitle: 'REA context is off: REA\'s tools and instructions are removed from the model context. Click to turn it on.',
+      onTitle:
+        "REA context is on for this conversation: the model can see REA's tool schemas and its instructions. Click to turn it off.",
+      offTitle:
+        "REA context is off for this conversation: REA's tools and instructions are out of the model context. Click to turn it on.",
       busy: 'Switching…',
       failed: 'The host did not answer. Is the plugin still installed?',
     }
@@ -36,19 +43,22 @@ window.__ModuleLoader__.load({
     const zh = {
       on: 'REA 开',
       off: 'REA 关',
-      onTitle: 'REA 上下文已开启：模型能看到 REA 的工具与说明。点击关闭。',
-      offTitle: 'REA 上下文已关闭：REA 的工具与说明已从模型上下文移除。点击开启。',
+      onTitle: '本对话的 REA 上下文已开启：模型能看到 REA 的工具与说明。点击关闭。',
+      offTitle: '本对话的 REA 上下文已关闭：REA 的工具与说明已从模型上下文移除。点击开启。',
       busy: '切换中…',
       failed: '宿主没有应答，插件还在吗？',
     }
 
     /**
-     * Read the current position from the Host.
+     * Read this conversation's position from the Host.
+     * @param session - the conversation id from the slot props.
      * @returns the state object, or undefined when the Host cannot answer.
      */
-    async function readState() {
+    async function readState(session) {
       try {
-        const response = await fetch(ENDPOINT, { credentials: 'same-origin' })
+        const response = await fetch(`${ENDPOINT}?session=${encodeURIComponent(session)}`, {
+          credentials: 'same-origin',
+        })
         if (!response.ok) return undefined
         return await response.json()
       } catch {
@@ -57,17 +67,18 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Move the switch on the Host.
+     * Move this conversation's switch on the Host.
+     * @param session - the conversation id from the slot props.
      * @param enabled - the desired position.
      * @returns the state after the call, or undefined on failure.
      */
-    async function writeState(enabled) {
+    async function writeState(session, enabled) {
       try {
         const response = await fetch(ENDPOINT, {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ enabled }),
+          body: JSON.stringify({ session, enabled }),
         })
         if (!response.ok) return undefined
         return await response.json()
@@ -80,24 +91,29 @@ window.__ModuleLoader__.load({
      * The switch itself: one small pill under the composer.
      *
      * Green means the model can see the governed servers' tools and
-     * instructions; grey means they are out of its context. Clicking flips it and
-     * the change lands on the next step — no restart, no page reload.
-     * @param props - carries the bound translate function.
+     * instructions in this conversation; grey means they are out of its context.
+     * Clicking flips it and the change lands on the next step — no restart, no
+     * page reload.
+     * @param props - `t` the bound translate function, `session` the slot's id.
      */
-    function ReaToggle({ t }) {
+    function ReaToggle({ t, session }) {
       const [state, setState] = react.useState(undefined)
       const [busy, setBusy] = react.useState(false)
       const [failed, setFailed] = react.useState(false)
 
+      // Re-read whenever the pill is moved to another conversation: one
+      // component serves every conversation, so the id is the trigger.
       react.useEffect(() => {
         let live = true
-        readState().then(next => {
+        setState(undefined)
+        setFailed(false)
+        readState(session).then(next => {
           if (live && next !== undefined) setState(next)
         })
         return () => {
           live = false
         }
-      }, [])
+      }, [session])
 
       const enabled = state?.enabled
       const known = typeof enabled === 'boolean'
@@ -106,11 +122,11 @@ window.__ModuleLoader__.load({
         if (busy) return
         setBusy(true)
         setFailed(false)
-        const next = await writeState(!enabled)
+        const next = await writeState(session, !enabled)
         if (next !== undefined) setState(next)
         else setFailed(true)
         setBusy(false)
-      }, [busy, enabled])
+      }, [busy, enabled, session])
 
       // Nothing to offer until the Host answers.
       if (!known) return null
@@ -184,8 +200,9 @@ window.__ModuleLoader__.load({
 
       // The dock's registration options are `id`, `order` and `label` only, so
       // the translate function rides in through the component's own closure
-      // rather than an option the slot would reject.
-      const Toggle = () => react.createElement(ReaToggle, { t })
+      // rather than an option the slot would reject. The slot's owner props
+      // carry `sessionId`, which is what makes this pill per-conversation.
+      const Entry = props => react.createElement(ReaToggle, { t, session: props.sessionId })
 
       ctx.slots.inject('conversation.composer.dock', () =>
         ctx.slots.register(
@@ -195,7 +212,7 @@ window.__ModuleLoader__.load({
             order: 90,
             label: () => t('on'),
           },
-          Toggle,
+          Entry,
         ),
       )
     }

@@ -1,6 +1,6 @@
 {
   "name": "dsh-rea-toggle",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "One switch that takes the REA (reverse-engineer-anything) MCP server's tool schemas and its server-instructions prompt block out of the model context, per agent and live, and puts them back on demand. · 一个开关，实时把 REA 逆向工具的工具与说明从模型上下文中移除或放回。",
   "keywords": [
     "dsh",
